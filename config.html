@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/css/common.min.css" rel="stylesheet"/>
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdn.staticfile.org/bootstrap-show-password/1.1.2/bootstrap-show-password.min.js"></script>
+    <script src="static/js/common.min.js"></script>
+    <title>前端图床</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="index.html">前端图床</a></li>
+                <li class="active"><a href="config.html">配置</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <div class="page-header">
+        <h1>OSS bucket 配置</h1>
+    </div>
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <form role="form" id="form">
+                <div class="form-group">
+                    <label>region</label>
+                    <input type="text" class="form-control" id="region"/>
+                    <br>
+                    <label>accessKeyId</label>
+                    <input type="text" class="form-control" id="accessKeyId"/>
+                    <br>
+                    <label>accessKeySecret</label>
+                    <input type="password" class="form-control" id="accessKeySecret" data-toggle="password"/>
+                    <br>
+                    <label>bucket</label>
+                    <input type="text" class="form-control" id="bucket"/>
+                </div>
+                <a class="btn btn-default" onclick="keepCookie()">保存</a>
+                <br><br>
+            </form>
+            <script>
+                $("#region").val($.cookie('region'));
+                $("#accessKeyId").val($.cookie('accessKeyId'));
+                $("#accessKeySecret").val($.cookie('accessKeySecret'));
+                $("#bucket").val($.cookie('bucket'));
+            </script>
+        </div>
+    </div>
+</div>
+<footer class="footer">
+    <div class="container">
+        <p class="text-muted">Copyright &#9400; 2019 </p>
+    </div>
+</footer>
+</body>
+</html>
