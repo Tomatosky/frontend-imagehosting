@@ -11,8 +11,8 @@
     <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="static/js/fileinput.min.js"></script>
-    <script src="static/js/common.min.js"></script>
+    <script src="static/js/common.js"></script>
+    <script src="static/js/fileinput.js"></script>
     <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.0.0.min.js"></script>
     <title>前端图床</title>
 </head>
@@ -36,42 +36,17 @@
             <input id="smfile" type="file" multiple class="file" accept="image/*">
         </div>
     </form>
+    <form class="radio">
+    </form>
     <script type="text/javascript" src="static/js/purify.min.js"></script>
     <script>
-        if (checkConfig()) {
-            document.getElementById('smfile').addEventListener('change', function (e) {
-                $('.alert').remove();
-                for (let i = 0; i < e.target.files.length; i++) {
-                    let file = e.target.files[i];
-                    // let newname = getNewname(file);
-                    let time = new Date().getTime();
-                    let client = new OSS({
-                        region: $.cookie('region'),
-                        accessKeyId: $.cookie('accessKeyId'),
-                        accessKeySecret: $.cookie('accessKeySecret'),
-                        bucket: $.cookie('bucket'),
-                        secure: true
-                    });
-                    $(".kv-main").append('<div class="alert alert-info" id="' + time.toString() + '">\n' +
-                        '        <a href="#" class="close" data-dismiss="alert"></a>\n' +
-                        '        <strong>正在上传文件：' + file.name + '</strong>\n' +
-                        '    </div>');
-                    client.multipartUpload(getDate() + '/' + file.name, file).then(function () {
-                        $('#' + time.toString()).remove();
-                        $(".kv-main").append('<div class="alert alert-success">\n' +
-                            '        <a href="#" class="close" data-dismiss="alert"></a>\n' +
-                            '        <strong>' + file.name + ' 上传成功</strong>\n' +
-                            '    </div>');
-                    }).catch(function (err) {
-                        $('#' + time.toString()).remove();
-                        $(".kv-main").append('<div class="alert alert-danger">\n' +
-                            '        <a href="#" class="close" data-dismiss="alert"></a>\n' +
-                            '        <strong>上传失败！ ' + err + '</strong>\n' +
-                            '    </div>');
-                    });
-                }
-            });
-        }
+        $(function () {
+            if (checkConfig()) {
+                document.getElementById('smfile').addEventListener('change', function (e) {
+                    uploadImg(e)
+                });
+            }
+        })
     </script>
 </div>
 <footer class="footer">

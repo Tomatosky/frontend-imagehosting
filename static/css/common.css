@@ -24,10 +24,6 @@ body > .container {
     text-align: center;
 }
 
-.container .form-group {
-    margin: 100px 0;
-}
-
 .footer > .container {
     padding-right: 15px;
     padding-left: 15px;
@@ -48,4 +44,8 @@ code {
     left: 0;
     opacity: 0;
     z-index: -10;
+}
+
+.radio > label{
+    padding-right: 30px;
 }

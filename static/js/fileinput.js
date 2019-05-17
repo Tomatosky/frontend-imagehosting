@@ -171,6 +171,7 @@
                     disabled = (url === false) && isDisabled,
                     actions = data.isDelete ? data.actions(false, true, disabled, url, key) : '',
                     footer = data.footer.repl('{actions}', actions);
+                console.log(config);
                 return footer
                     .repl('{caption}', caption)
                     .repl('{width}', width)
@@ -218,7 +219,7 @@
             uploadIcon: '<i class="glyphicon glyphicon-upload text-info"></i>',
             uploadClass: 'btn btn-xs btn-default',
             uploadTitle: 'Upload file',
-            indicatorNew: '<i class="glyphicon glyphicon-hand-down text-warning"></i>',
+            indicatorNew: '',
             indicatorSuccess: '<i class="glyphicon glyphicon-ok-sign file-icon-large text-success"></i>',
             indicatorError: '<i class="glyphicon glyphicon-exclamation-sign text-danger"></i>',
             indicatorLoading: '<i class="glyphicon glyphicon-hand-up text-muted"></i>',
@@ -238,7 +239,7 @@
         tMain2 = '{preview}\n<div class="kv-upload-progress hide"></div>\n{remove}\n{cancel}\n{upload}\n{browse}\n',
         tPreview = '<div class="file-preview {class}">\n' +
             '    <div class="close fileinput-remove">&times;</div>\n' +
-            '    <div class="{dropClass}">\n' +
+            '    <div class="{dropClass}" id="file-drop-zone">\n' +
             '    <div class="file-preview-thumbnails">\n' +
             '    </div>\n' +
             '    <div class="clearfix"></div>' +
@@ -246,10 +247,10 @@
             '    <div class="kv-fileinput-error"></div>\n' +
             '    </div>\n' +
             '</div>',
-        tIcon = '<span class="glyphicon glyphicon-file kv-caption-icon">单击图片复制链接  -----  </span>',
+        tIcon = '',
         tCaption = '<div tabindex="-1" class="form-control file-caption {class}">\n' +
             '   <span class="file-caption-ellipsis">&hellip;</span>\n' +
-            '   <div class="file-caption-name"></div>\n' +
+            '   单击图片复制链接\n' +
             '</div>',
         tModal = '<div id="{id}" class="modal fade">\n' +
             '  <div class="modal-dialog modal-lg">\n' +
@@ -281,10 +282,8 @@
             '    <div class="file-upload-indicator" tabindex="-1" title="{indicatorTitle}">{indicator}</div>\n' +
             '    <div class="clearfix"></div>\n' +
             '</div>',
-        tActionDelete = '<button type="button" class="kv-file-remove {removeClass}" ' +
-            'title="{removeTitle}"{dataUrl}{dataKey}>{removeIcon}</button>\n',
-        tActionUpload = '<button type="button" class="kv-file-upload {uploadClass}" title="{uploadTitle}">' +
-            '   {uploadIcon}\n</button>\n',
+        tActionDelete = '',
+        tActionUpload = '',
         tGeneric = '<div class="file-preview-frame{frameClass}" id="{previewId}" data-fileindex="{fileindex}">\n' +
             '   {content}\n' +
             '   {footer}\n' +
@@ -297,7 +296,7 @@
             '</div>',
         tImage = '<div class="file-preview-frame{frameClass}" id="{previewId}" data-fileindex="{fileindex}">\n' +
             '   <textarea id="copy_temp"></textarea>' +
-            '   <img src="{data}" class="file-preview-image" title="{caption}" alt="{caption}" id="1-{previewId}" onclick="copyImagUrl(\'1-{previewId}\')"' + STYLE_SETTING + '>\n' +
+            '   <img src="{data}" class="file-preview-image" title="{caption}" alt="{caption}" id="1-{previewId}" onclick="generateImagUrl(\'1-{previewId}\')"' + STYLE_SETTING + '>\n' +
             '   {footer}\n' +
             '</div>\n',
         tText = '<div class="file-preview-frame{frameClass}" id="{previewId}" data-fileindex="{fileindex}">\n' +
@@ -346,7 +345,7 @@
             main1: tMain1,
             main2: tMain2,
             preview: tPreview,
-            icon: tIcon,
+            icon: '单击图片复制链接',
             caption: tCaption,
             modal: tModal,
             progress: tProgress,
@@ -404,7 +403,14 @@
             }
         },
         isEmpty = function (value, trim) {
-            return value === null || value === undefined || value.length === 0 || (trim && $.trim(value) === '');
+            // try {
+            //     if (value[0].name) {
+            //         uploadImgDrop(value)
+            //     }
+            // } catch (e) {
+            //     let aaa;
+            // }
+            return value === null || value === undefined || value.length === 0 || (trim && $.trim(value) === '')
         },
         isArray = function (a) {
             return Array.isArray(a) || Object.prototype.toString.call(a) === '[object Array]';
@@ -825,12 +831,14 @@
                 $(this).removeClass('highlighted');
             });
             $zone.on('drop', function (e) {
+                // console.log(e.originalEvent.dataTransfer.files);
                 e.preventDefault();
                 if (self.isDisabled || isEmpty(e.originalEvent.dataTransfer.files)) {
                     return;
                 }
-                self.change(e, 'dragdrop');
-                $(this).removeClass('highlighted');
+                let dropFiles = e.originalEvent.dataTransfer.files
+                // self.change(e, 'dragdrop');
+                // $(this).removeClass('highlighted');
             });
             $(document).on('dragenter dragover drop', function (e) {
                 e.stopPropagation();
@@ -1686,7 +1694,7 @@
             if (!this.showPreview) {
                 return;
             }
-            var self = this, cat = self.parseFileType(file), caption = self.slug(file.name), content, strText,
+            var self = this, cat = self.parseFileType(file), caption = self.slug(file), content, strText,
                 types = self.allowedPreviewTypes, mimes = self.allowedPreviewMimeTypes,
                 tmplt = self.getPreviewTemplate(cat),
                 config = isSet(cat, self.previewSettings) ? self.previewSettings[cat] : defaultPreviewSettings[cat],
@@ -1729,7 +1737,9 @@
             }
         },
         slugDefault: function (text) {
-            // console.log(self.filestack);
+            if (text.lastModified) {
+                return text.lastModified.toString() + text.size.toString() + '.jpg';
+            }
             return isEmpty(text) ? '' : text.split(/(\\|\/)/g).pop().replace(/[^\w\u00C0-\u017F\-.\\\/ ]+/g, '');
         },
         getFileStack: function (skipNull) {
@@ -2146,7 +2156,7 @@
     };
 
     $.fn.fileinput.defaults = {
-        language: 'en',
+        language: 'zh',
         showCaption: true,
         showPreview: true,
         showRemove: false,
@@ -2186,7 +2196,7 @@
         cancelClass: 'btn btn-default',
         uploadIcon: '<i class="glyphicon glyphicon-upload"></i> ',
         uploadClass: 'btn btn-default',
-        uploadUrl: null,
+        uploadUrl: 'host',
         uploadAsync: true,
         uploadExtraData: {},
         minImageWidth: null,
@@ -2224,7 +2234,7 @@
     $.fn.fileinputLocales.en = {
         fileSingle: 'file',
         filePlural: 'files',
-        browseLabel: 'Browse &hellip;',
+        browseLabel: '选择文件',
         removeLabel: 'Remove',
         removeTitle: 'Clear selected files',
         cancelLabel: 'Cancel',
@@ -2244,13 +2254,13 @@
         msgValidationError: 'File Upload Error',
         msgLoading: 'Loading file {index} of {files} &hellip;',
         msgProgress: 'Loading file {index} of {files} - {name} - {percent}% completed.',
-        msgSelected: '{n} {files} selected',
+        msgSelected: '',
         msgFoldersNotAllowed: 'Drag & drop files only! {n} folder(s) dropped were skipped.',
         msgImageWidthSmall: 'Width of image file "{name}" must be at least {size} px.',
         msgImageHeightSmall: 'Height of image file "{name}" must be at least {size} px.',
         msgImageWidthLarge: 'Width of image file "{name}" cannot exceed {size} px.',
         msgImageHeightLarge: 'Height of image file "{name}" cannot exceed {size} px.',
-        dropZoneTitle: 'Drag & drop files here &hellip;'
+        dropZoneTitle: '拖拽上传暂未实现'
     };
 
     $.extend($.fn.fileinput.defaults, $.fn.fileinputLocales.en);
