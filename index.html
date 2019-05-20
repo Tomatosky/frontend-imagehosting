@@ -41,11 +41,10 @@
     <script type="text/javascript" src="static/js/purify.min.js"></script>
     <script>
         $(function () {
-            if (checkConfig()) {
-                document.getElementById('smfile').addEventListener('change', function (e) {
-                    uploadImg(e)
-                });
-            }
+            checkConfig();
+            document.getElementById('smfile').addEventListener('change', function (e) {
+                uploadImg(e)
+            });
         })
     </script>
 </div>

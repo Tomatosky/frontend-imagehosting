@@ -16,7 +16,7 @@ function appendKvMain(level, id, content) {
 
 function generateImagUrl(id) {
     $('.alert').remove();
-    let domain
+    let domain;
     if ($.cookie("ownDomain")) {
         domain = $.cookie("ownDomain")
     } else {
@@ -39,6 +39,7 @@ function generateImagUrl(id) {
 }
 
 function keepCookie() {
+    $('.alert').remove();
     let msg;
     let variety = ["region", "accessKeyId", "accessKeySecret", "bucket", "ownDomain"];
     for (let i = 0; i < variety.length; i++) {
@@ -53,10 +54,43 @@ function keepCookie() {
         }
     }
     if (!msg) {
-        msg = '配置保存成功'
+        checkOss()
+    } else {
+        appendKvMain('danger', randomStr(), msg);
     }
-    $('.alert-danger').remove();
-    appendKvMain('danger', randomStr(), msg);
+}
+
+function checkOss() {
+    let client = new OSS({
+        region: $.cookie('region'),
+        accessKeyId: $.cookie('accessKeyId'),
+        accessKeySecret: $.cookie('accessKeySecret'),
+        bucket: $.cookie('bucket'),
+        secure: true,
+        timeout: 1000
+    });
+    client.list({
+        'max-keys': 1
+    }).then(function (result) {
+        if ($(".btn-default").length) {
+            appendKvMain('success', randomStr(), '配置保存成功');
+        }
+    }).catch(function (err) {
+        if (err.toString().indexOf("ConnectionTimeoutError") !== -1) {
+            appendKvMain('danger', randomStr(), '连接超时，请检查region和bucket');
+        }
+        if (err.toString().indexOf("Access Key Id you provided") !== -1) {
+            appendKvMain('danger', randomStr(), 'accessKeyId 填写出错');
+        }
+        if (err.toString().indexOf("signature we calculated") !== -1) {
+            appendKvMain('danger', randomStr(), 'accessKeySecret 填写出错');
+        }
+        appendKvMain('danger', randomStr(), err);
+        try {
+            $("#smfile").fileinput('disable');
+        } catch (e) {
+        }
+    });
 }
 
 function checkConfig() {
@@ -66,9 +100,10 @@ function checkConfig() {
             accessKeyId: $.cookie('accessKeyId'),
             accessKeySecret: $.cookie('accessKeySecret'),
             bucket: $.cookie('bucket'),
-            secure: true
+            secure: true,
+            timeout: 1000
         });
-        return true
+        checkOss()
     } catch (e) {
         appendKvMain('danger', randomStr(), '请先对图床进行配置');
         $("#smfile").fileinput('disable');
@@ -89,7 +124,8 @@ function uploadImg(e) {
         let newname = file.lastModified.toString() + file.size.toString() + '.jpg';
         let time = new Date().getTime();
         appendKvMain('info', time, '正在上传文件：' + newname);
-        client.multipartUpload(getDate() + '/' + newname, file).then(function () {
+        client.multipartUpload(getDate() + '/' + newname, file).then(function (result) {
+            console.log(result);
             $('#' + time.toString()).remove();
             appendKvMain('success', time, newname + ' 上传成功');
         }).catch(function errorMsg(err) {
