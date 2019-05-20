@@ -6,7 +6,7 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <link href="static/css/common.min.css" rel="stylesheet"/>
+    <link href="static/css/common.css" rel="stylesheet"/>
     <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
@@ -35,15 +35,14 @@
                 <div class="form-group">
                     <label>region</label>
                     <input type="text" class="form-control" id="region"/>
-                    <br>
                     <label>accessKeyId</label>
                     <input type="text" class="form-control" id="accessKeyId"/>
-                    <br>
                     <label>accessKeySecret</label>
                     <input type="password" class="form-control" id="accessKeySecret" data-toggle="password"/>
-                    <br>
                     <label>bucket</label>
                     <input type="text" class="form-control" id="bucket"/>
+                    <label>自有域名(选填，需先在bucket内绑定用户域名)</label>
+                    <input type="text" class="form-control" id="ownDomain"/>
                 </div>
                 <a class="btn btn-default" onclick="keepCookie()">保存</a>
                 <br><br>
@@ -53,14 +52,18 @@
                 $("#accessKeyId").val($.cookie('accessKeyId'));
                 $("#accessKeySecret").val($.cookie('accessKeySecret'));
                 $("#bucket").val($.cookie('bucket'));
+                $("#ownDomain").val($.cookie('ownDomain'));
             </script>
         </div>
     </div>
 </div>
-<footer class="footer">
-    <div class="container">
-        <p class="text-muted">Copyright &#9400; 2019 </p>
-    </div>
-</footer>
+<div class="navbar-fixed-bottom bottom-style">
+    <span class="github-btn github-btn-large">
+        <a class="gh-btn" href="https://github.com/Tomatosky/frontend-imagehosting" target="_blank">
+            <span class="gh-ico" aria-hidden="true"></span>
+            <span class="gh-text">Star</span>
+        </a>
+    </span>
+</div>
 </body>
 </html>

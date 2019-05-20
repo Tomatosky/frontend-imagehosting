@@ -16,7 +16,13 @@ function appendKvMain(level, id, content) {
 
 function generateImagUrl(id) {
     $('.alert').remove();
-    let url = 'https://' + $.cookie('bucket') + '.' + $.cookie('region') + '.aliyuncs.com/' + getDate() + '/' + document.getElementById(id).title;
+    let domain
+    if ($.cookie("ownDomain")) {
+        domain = $.cookie("ownDomain")
+    } else {
+        domain = $.cookie('bucket') + '.' + $.cookie('region') + '.aliyuncs.com'
+    }
+    let url = 'https://' + domain + '/' + getDate() + '/' + document.getElementById(id).title;
     let md = '![](' + url + ')';
     if ($.cookie('type') === 'markdown') {
         url = md
@@ -33,11 +39,11 @@ function generateImagUrl(id) {
 }
 
 function keepCookie() {
-    let msg = '';
-    let variety = ["region", "accessKeyId", "accessKeySecret", "bucket"];
+    let msg;
+    let variety = ["region", "accessKeyId", "accessKeySecret", "bucket", "ownDomain"];
     for (let i = 0; i < variety.length; i++) {
         let varietyValue = $('#' + variety[i]).val();
-        if (!varietyValue) {
+        if (!varietyValue && variety[i] !== "ownDomain") {
             msg = variety[i] + ' 不能为空';
             if (msg) {
                 break
