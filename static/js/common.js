@@ -15,7 +15,6 @@ function appendKvMain(level, id, content) {
 }
 
 function generateImagUrl(id) {
-    $('.alert').remove();
     let domain;
     if ($.cookie("ownDomain")) {
         domain = $.cookie("ownDomain")
@@ -39,6 +38,8 @@ function generateImagUrl(id) {
 }
 
 function keepCookie() {
+    let button = $('.btn-default');
+    button.attr("disabled", true);
     $('.alert').remove();
     let msg;
     let variety = ["region", "accessKeyId", "accessKeySecret", "bucket", "ownDomain"];
@@ -57,23 +58,28 @@ function keepCookie() {
         checkOss()
     } else {
         appendKvMain('danger', randomStr(), msg);
+        button.removeAttr("disabled");
     }
 }
 
 function checkOss() {
+    let button = $('.btn-default');
     let client = new OSS({
         region: $.cookie('region'),
         accessKeyId: $.cookie('accessKeyId'),
         accessKeySecret: $.cookie('accessKeySecret'),
         bucket: $.cookie('bucket'),
         secure: true,
-        timeout: 1000
+        timeout: 2000
     });
     client.list({
         'max-keys': 1
     }).then(function (result) {
-        if ($(".btn-default").length) {
+        if (button.length) {
             appendKvMain('success', randomStr(), '配置保存成功');
+            button.removeAttr("disabled");
+        } else {
+            $("#smfile").fileinput('enable');
         }
     }).catch(function (err) {
         if (err.toString().indexOf("ConnectionTimeoutError") !== -1) {
@@ -85,28 +91,23 @@ function checkOss() {
         if (err.toString().indexOf("signature we calculated") !== -1) {
             appendKvMain('danger', randomStr(), 'accessKeySecret 填写出错');
         }
+        button.removeAttr("disabled");
         appendKvMain('danger', randomStr(), err);
-        try {
-            $("#smfile").fileinput('disable');
-        } catch (e) {
-        }
     });
 }
 
 function checkConfig() {
+    $("#smfile").fileinput('disable');
     try {
         new OSS({
             region: $.cookie('region'),
             accessKeyId: $.cookie('accessKeyId'),
             accessKeySecret: $.cookie('accessKeySecret'),
             bucket: $.cookie('bucket'),
-            secure: true,
-            timeout: 1000
         });
         checkOss()
     } catch (e) {
         appendKvMain('danger', randomStr(), '请先对图床进行配置');
-        $("#smfile").fileinput('disable');
     }
 }
 
