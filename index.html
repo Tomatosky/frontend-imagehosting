@@ -8,12 +8,12 @@
     <link href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <link href="static/css/fileinput.css" rel="stylesheet"/>
     <link href="static/css/common.css" rel="stylesheet"/>
-    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
-    <script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.0.0.min.js"></script>
+    <script src="https://unpkg.com/cos-js-sdk-v5/dist/cos-js-sdk-v5.min.js"></script>
     <script src="static/js/common.js"></script>
     <script src="static/js/fileinput.js"></script>
-    <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.0.0.min.js"></script>
     <title>前端图床</title>
 </head>
 <body>
@@ -36,17 +36,9 @@
             <input id="smfile" type="file" multiple class="file" accept="image/*">
         </div>
     </form>
-    <form class="radio">
+    <form class="radio" style="margin: 20px 0">
     </form>
-    <script type="text/javascript" src="static/js/purify.min.js"></script>
-    <script>
-        $(function () {
-            checkConfig();
-            document.getElementById('smfile').addEventListener('change', function (e) {
-                uploadImg(e)
-            });
-        })
-    </script>
+    <textarea id="copy_temp"></textarea>
 </div>
 <div class="navbar-fixed-bottom bottom-style">
     <span class="github-btn github-btn-large">
@@ -57,4 +49,16 @@
     </span>
 </div>
 </body>
+<script>
+    if (!localStorage.getItem('type')) {
+        localStorage.setItem('type', 'markdown')
+    }
+    checkType();
+    $('[type=radio][name=type]').change(function () {
+        localStorage.setItem('type', $(this).parent()[0].innerText)
+    })
+
+    $("#smfile").fileinput('disable');
+    checkConfig()
+</script>
 </html>

@@ -1,43 +1,53 @@
 function getDate() {
-    let now = new Date();
-    let Y = now.getFullYear();
-    let M = now.getMonth() + 1;
-    let m;
+    let now = new Date(),
+        Y = now.getFullYear(),
+        M = now.getMonth() + 1,
+        m;
     M < 10 ? m = '0' + M.toString() : m = M.toString();
     return Y.toString() + m
 }
 
-function appendKvMain(level, id, content) {
+function appendKvMain(level, content, disappear = false) {
+    $('.alert-info').remove();
+    $('.alert-success').remove();
+
     let kvMain = $(".kv-main");
-    kvMain.append('<div class="alert alert-' + level + '" id="' + id + '">' +
+    kvMain.append('<div class="alert alert-' + level + '"' + '">' +
         '<a href="#" class="close" data-dismiss="alert"></a><strong>' +
         content + '</strong></div>');
+    if (disappear) {
+        setTimeout(function () {
+            $('.alert').remove();
+        }, 1500);
+    }
 }
 
-function generateImagUrl(id) {
+function generateImagUrl(imagePath) {
     let domain;
-    if ($.cookie("ownDomain")) {
-        domain = $.cookie("ownDomain")
+    let company = localStorage.getItem('company');
+    if (localStorage.getItem(company + '_ownDomain')) {
+        domain = localStorage.getItem(company + '_ownDomain')
     } else {
-        domain = $.cookie('bucket') + '.' + $.cookie('region') + '.aliyuncs.com'
+        if (company === 'oss') {
+            domain = localStorage.getItem(company + '_bucket') + '.' + localStorage.getItem(company + '_region') + '.aliyuncs.com'
+        } else {
+            domain = localStorage.getItem(company + '_bucket') + '.cos.' + localStorage.getItem(company + '_region') + '.myqcloud.com'
+        }
     }
-    let url = 'https://' + domain + '/' + getDate() + '/' + document.getElementById(id).title;
+    let url = 'https://' + domain + '/' + imagePath;
     let md = '![](' + url + ')';
-    if ($.cookie('type') === 'markdown') {
+    if (localStorage.getItem('type') === 'markdown') {
         url = md
     }
     let input = document.getElementById("copy_temp");
     input.value = url; // 修改文本框的内容
     input.select(); // 选中文本
     document.execCommand("copy"); // 执行浏览器复制命令
-    $('.alert-success').remove();
-    appendKvMain('success', randomStr(), '复制链接成功');
-    setTimeout(function () {
-        $('.alert-success').alert('close');
-    }, 500);
+    appendKvMain('success', '复制链接成功', true);
 }
 
-function keepCookie() {
+function keepConfig() {
+    let company = localStorage.getItem('company');
     let button = $('.btn-default');
     button.attr("disabled", true);
     $('.alert').remove();
@@ -51,98 +61,137 @@ function keepCookie() {
                 break
             }
         } else {
-            $.cookie(variety[i], varietyValue, {expires: 365, path: '/'});
+            localStorage.setItem(company + '_' + variety[i], varietyValue);
         }
     }
     if (!msg) {
-        checkOss()
+        let client = getClient();
+        company === 'oss' ? checkOss(client) : checkCos(client)
     } else {
-        appendKvMain('danger', randomStr(), msg);
-        button.removeAttr("disabled");
+        appendKvMain('danger', msg);
     }
+    button.removeAttr("disabled");
 }
 
-function checkOss() {
-    let button = $('.btn-default');
-    let client = new OSS({
-        region: $.cookie('region'),
-        accessKeyId: $.cookie('accessKeyId'),
-        accessKeySecret: $.cookie('accessKeySecret'),
-        bucket: $.cookie('bucket'),
-        secure: true,
-        timeout: 2000
-    });
+function getClient() {
+    let company = localStorage.getItem('company');
+    let client;
+    if (company === 'oss') {
+        client = new OSS({
+            region: localStorage.getItem('oss_region'),
+            accessKeyId: localStorage.getItem('oss_accessKeyId'),
+            accessKeySecret: localStorage.getItem('oss_accessKeySecret'),
+            bucket: localStorage.getItem('oss_bucket'),
+            secure: true,
+            timeout: 2000
+        });
+    } else {
+        client = new COS({
+            SecretId: localStorage.getItem('cos_accessKeyId'),
+            SecretKey: localStorage.getItem('cos_accessKeySecret'),
+            Timeout: 2000
+        });
+    }
+    return client;
+}
+
+function checkOss(client) {
     client.list({
         'max-keys': 1
     }).then(function (result) {
-        if (button.length) {
-            appendKvMain('success', randomStr(), '配置保存成功');
-            button.removeAttr("disabled");
-        } else {
-            $("#smfile").fileinput('enable');
-        }
+        appendKvMain('success', 'oss配置成功');
+        $("#smfile").fileinput('enable');
     }).catch(function (err) {
         if (err.toString().indexOf("ConnectionTimeoutError") !== -1) {
-            appendKvMain('danger', randomStr(), '连接超时，请检查region和bucket');
+            appendKvMain('danger', '连接超时，请检查region和bucket');
         }
         if (err.toString().indexOf("Access Key Id you provided") !== -1) {
-            appendKvMain('danger', randomStr(), 'accessKeyId 填写出错');
+            appendKvMain('danger', 'accessKeyId 填写出错');
         }
         if (err.toString().indexOf("signature we calculated") !== -1) {
-            appendKvMain('danger', randomStr(), 'accessKeySecret 填写出错');
+            appendKvMain('danger', 'accessKeySecret 填写出错');
         }
-        button.removeAttr("disabled");
-        appendKvMain('danger', randomStr(), err);
+        appendKvMain('danger', err);
+    });
+}
+
+function checkCos(client) {
+    client.getBucket({
+        Bucket: localStorage.getItem('cos_bucket'),
+        Region: localStorage.getItem('cos_region'),
+    }, function (err, data) {
+        if (err) {
+            appendKvMain('danger', err);
+        } else {
+            appendKvMain('success', 'cos配置成功');
+            $("#smfile").fileinput('enable');
+        }
     });
 }
 
 function checkConfig() {
-    $("#smfile").fileinput('disable');
-    try {
-        new OSS({
-            region: $.cookie('region'),
-            accessKeyId: $.cookie('accessKeyId'),
-            accessKeySecret: $.cookie('accessKeySecret'),
-            bucket: $.cookie('bucket'),
-        });
-        checkOss()
-    } catch (e) {
-        appendKvMain('danger', randomStr(), '请先对图床进行配置');
+    appendKvMain('info', '正在检测图床配置');
+    let company = localStorage.getItem('company'),
+        region = localStorage.getItem(company + '_region'),
+        accessKeyId = localStorage.getItem(company + '_accessKeyId'),
+        accessKeySecret = localStorage.getItem(company + '_accessKeySecret'),
+        bucket = localStorage.getItem(company + '_bucket');
+
+    if (company && region && accessKeyId && accessKeySecret && bucket) {
+        let client = getClient();
+        company === 'oss' ? checkOss(client) : checkCos(client);
+    } else {
+        appendKvMain('danger', '请先对图床进行配置');
     }
 }
 
-function uploadImg(e) {
-    $('.alert').remove();
-    let client = new OSS({
-        region: $.cookie('region'),
-        accessKeyId: $.cookie('accessKeyId'),
-        accessKeySecret: $.cookie('accessKeySecret'),
-        bucket: $.cookie('bucket'),
-        secure: true
+function upload2cos(client, file, filename) {
+    client.putObject({
+        Bucket: localStorage.getItem('cos_bucket'),
+        Region: localStorage.getItem('cos_region'),
+        Key: filename,
+        StorageClass: 'STANDARD',
+        Body: file,
+    }, function (err, data) {
+        if (err) {
+            appendKvMain('danger', file.name + '上传失败！ ' + err);
+        } else {
+            console.log(data);
+            appendKvMain('success', file.name + ' 上传成功', true);
+            $(".file-preview-frame").on("click", function () {
+                generateImagUrl($(this).attr('data-fileid'));
+            });
+        }
     });
-    for (let i = 0; i < e.target.files.length; i++) {
-        let file = e.target.files[i];
-        let newname = file.lastModified.toString() + file.size.toString() + '.jpg';
-        let time = new Date().getTime();
-        appendKvMain('info', time, '正在上传文件：' + newname);
-        client.multipartUpload(getDate() + '/' + newname, file).then(function (result) {
-            console.log(result);
-            $('#' + time.toString()).remove();
-            appendKvMain('success', time, newname + ' 上传成功');
-        }).catch(function errorMsg(err) {
-            $('#' + time.toString()).remove();
-            appendKvMain('danger', time, newname + '上传失败！ ' + err);
-        });
-    }
 }
 
-function randomStr() {
-    return Math.random().toString().slice(2, 8)
+function upload2oss(client, file, filename) {
+    client.multipartUpload(filename, file).then(function (result) {
+        console.log(result);
+        appendKvMain('success', file.name + ' 上传成功', true);
+        $(".file-preview-frame").on("click", function () {
+            generateImagUrl($(this).attr('data-fileid'));
+        });
+    }).catch(function errorMsg(err) {
+        appendKvMain('danger', file.name + '上传失败！ ' + err);
+    });
+}
+
+function uploadImg(files) {
+    let client = getClient();
+    let company = localStorage.getItem('company')
+    for (let i = 0; i < files.length; i++) {
+        let file = files[i],
+            newName = getDate() + '/' + file.lastModified.toString() + file.size.toString() + '.' + file.name.split('.')[file.name.split('.').length - 1];
+
+        appendKvMain('info', '正在上传文件：' + newName, true);
+        company === 'oss' ? upload2oss(client, file, newName) : upload2cos(client, file, newName)
+    }
 }
 
 function checkType() {
     let radio = $(".radio");
-    if ($.cookie('type') === 'url') {
+    if (localStorage.getItem('type') === 'url') {
         radio.append('<label><input type="radio" name="type" checked/>url</label>\n' +
             '<label><input type="radio" name="type" id="markdown"/>markdown</label>')
     } else {
@@ -150,13 +199,3 @@ function checkType() {
             '<label><input type="radio" name="type" checked/>markdown</label>')
     }
 }
-
-$(function () {
-    if (!$.cookie('type')) {
-        $.cookie('type', 'markdown', {expires: 365, path: '/'})
-    }
-    checkType();
-    $('[type=radio][name=type]').change(function () {
-        $.cookie('type', $(this).parent()[0].innerText, {expires: 365, path: '/'})
-    })
-});
